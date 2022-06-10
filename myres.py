@@ -41,8 +41,9 @@ class MyRes():
         self.cookies = cookies
         self.coding = coding
         self.url = ''
+        self.proxies = {}
 
-    def get(self, url, re_text=None, params={}):
+    def get(self, url, re_text=None, params={}, **kwargs):
         '''
         封装requests.get方法
         args:
@@ -55,8 +56,13 @@ class MyRes():
         '''
         if self.config.get('Gen_url') and self.config.get('Gen_url') not in url:
             url = self.config.get('Gen_url') + url
-        res1 = requests.get(url, cookies=self.cookies,
-                            params=params, headers=self.headers)
+        if self.proxies:
+            res1 = requests.get(url, cookies=self.cookies,
+                                params=params, headers=self.headers, proxies=self.proxies,  **kwargs)
+        else:
+            res1 = requests.get(url, cookies=self.cookies,
+                                params=params, headers=self.headers,  **kwargs)
+
         res1.encoding = self.coding
         self.cookies.update(res1.cookies.get_dict())
         self.url = url
@@ -69,14 +75,18 @@ class MyRes():
             return res1, re_hou
         return res1, None
 
-    def post(self, url, data, re_text=None):
+    def post(self, url, data, re_text=None, **kwargs):
         '''
         封装requests.post方法
         '''
         if self.config.get('Gen_url') and self.config.get('Gen_url') not in url:
             url = self.config.get('Gen_url') + url
-        res1 = requests.post(
-            url, data=data, cookies=self.cookies, headers=self.headers)  # 这里加上header就有问题
+        if self.proxies:
+            res1 = requests.post(
+                url, data=data, cookies=self.cookies, headers=self.headers, proxies=self.proxies,  **kwargs)  # 这里加上header就有问题
+        else:
+            res1 = requests.post(
+                url, data=data, cookies=self.cookies, headers=self.headers,  **kwargs)
         res1.url = self.url
         res1.encoding = self.coding
         self.cookies.update(res1.cookies.get_dict())
@@ -110,3 +120,14 @@ def get_files(path):
     )
     t_files.sort(key=lambda x: x[2], reverse=True)
     return t_files
+
+
+if __name__ == '__main__':
+
+    r = MyRes({})
+    # 查询 ip
+    # r.proxies = {'http': 'http://127.0.0.1:21080'}
+    # z = r.get('http://httpbin.org/ip')
+    # z = r.get('http://httpbin.org/ip',
+    #           proxies={'http': 'http://127.0.0.1:21080'})
+    print(z[0].text)
