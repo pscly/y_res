@@ -9,6 +9,9 @@ def deadlines(year=2022, mouth=6, day=30):
         raise Exception
 
 
+def yz():
+    deadlines(mouth=7, day=20)
+
 if __name__ == '__main__':
-    deadlines()
+    yz()
     print('ok')
