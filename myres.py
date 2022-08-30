@@ -4,11 +4,15 @@ import re
 import yaml
 import json
 import time
+import random
 from parsel import Selector
+from addict import Dict
 
 # Host 应该被覆盖
-headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive',
-           'Host': 'pscly.cn', 'Pragma': 'no-cache', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0'}
+ua = Dict({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0'})
+headers = Dict({'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive',
+           'Host': 'pscly.cn', 'Pragma': 'no-cache', 'Upgrade-Insecure-Requests': '1'})
+headers.update(ua)
 
 
 def is_file(path):
@@ -35,14 +39,27 @@ class MyRes():
     仔细想想， 可以把cookies保存到一个对象中，到时候获取和调用都很方便了
     '''
 
-    def __init__(self, config: dict, headers={}, cookies={}, coding='utf-8') -> None:
+    def __init__(self, config: dict={}, headers={}, cookies={}, coding='utf-8', dailis:list=[]) -> None:
+        """ 
+        args:
+            dailis: 代理列表，格式为['http://ip:port', 'http://ip:port']
+        """ 
         self.config = config
         self.headers = headers
         self.cookies = cookies
         self.coding = coding
         self.url = ''
         self.proxies = {}
+        self.dailis = dailis
+        if dailis:
+            self.daili1 = self.get_one_daili()
+            self.proxies = {'http': self.daili1, 'https': self.daili1}
 
+    def get_one_daili(self):
+        if self.proxies:
+            return self.proxies
+        return random.choice(self.dailis)
+    
     def get(self, url, re_text=None, params={}, **kwargs):
         '''
         封装requests.get方法
@@ -124,10 +141,11 @@ def get_files(path):
 
 if __name__ == '__main__':
 
-    r = MyRes({})
+    r = MyRes(dailis=['http://112.25.236.167:9091'])
+    # r = MyRes(dailis=['http://127.0.0.1:21080'])
     # 查询 ip
     # r.proxies = {'http': 'http://127.0.0.1:21080'}
-    # z = r.get('http://httpbin.org/ip')
+    z = r.get('http://httpbin.org/ip')
     # z = r.get('http://httpbin.org/ip',
     #           proxies={'http': 'http://127.0.0.1:21080'})
     print(z[0].text)
